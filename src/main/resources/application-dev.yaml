@@ -1,0 +1,7 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+animeQuote:
+  collectorIntervalMillisecond: 5000
