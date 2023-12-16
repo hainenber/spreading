@@ -3,10 +3,10 @@ package com.hainenber.spreading.quote;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -18,12 +18,12 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 public class AnimeQuoteController {
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final AtomicLong counter = new AtomicLong();
 
     @Autowired
-    private AnimeQuoteController(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    private AnimeQuoteController(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     private ZonedDateTime getReadableRateLimitResetTime(HttpHeaders headers) {
@@ -38,14 +38,15 @@ public class AnimeQuoteController {
                 .atZone(localTimezone);
     }
 
-    @Scheduled(fixedRateString = "${animeQuote.collectorIntervalMillisecond}")
+    // @Scheduled(fixedRateString = "${animeQuote.collectorIntervalMillisecond}")
     private void runTask() throws HttpClientErrorException.TooManyRequests {
         String animeQuoteURL = "https://animechan.xyz/api/random";
         try {
-            AnimeQuote quote = restTemplate.getForObject(
-                    animeQuoteURL,
-                    AnimeQuote.class
-            );
+            AnimeQuote quote = restClient.get()
+                    .uri(animeQuoteURL)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(AnimeQuote.class);
             if (Optional.ofNullable(quote).isPresent()) {
                 System.out.printf("Collect #%s: %s\n", counter.incrementAndGet(), quote);
             }
