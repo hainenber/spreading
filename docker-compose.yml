@@ -1,12 +1,7 @@
 version: "3"
 
 services:
-  cache:
-    image: redis
+  app:
+    image: hainenber/spreading:latest
     ports:
-      - 6379:6379
-    volumes:
-      - "./redis-data:/data"
-
-  service:
-    image:
+      - "8080:8080"

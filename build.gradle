@@ -25,3 +25,19 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Custom Gradle task to containerise the application
+tasks.register('build-image', Exec) {
+	dependsOn tasks.build
+
+	description = 'Builds a Docker image for the Spring Boot application'
+	group = 'docker'
+
+	commandLine(
+			'docker', 'build', '-t',
+			"hainenber/${rootProject.name}:latest",
+			'--build-arg',
+			"JAR_PATH=${rootProject.name}-${version}.jar",
+			'.'
+	)
+}
