@@ -4,4 +4,9 @@ spring:
       on-profile: dev
 
 animeQuote:
+  enabled: false
+  collectorIntervalMillisecond: 5000
+
+hackernews:
+  enabled: true
   collectorIntervalMillisecond: 5000

@@ -2,8 +2,10 @@ package com.hainenber.spreading.quote;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -17,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "animeQuote.enabled", havingValue = "true")
 public class AnimeQuoteController {
     private final RestClient restClient;
     private final AtomicLong counter = new AtomicLong();
@@ -38,7 +41,7 @@ public class AnimeQuoteController {
                 .atZone(localTimezone);
     }
 
-    // @Scheduled(fixedRateString = "${animeQuote.collectorIntervalMillisecond}")
+    @Scheduled(fixedRateString = "${animeQuote.collectorIntervalMillisecond}")
     private void runTask() throws HttpClientErrorException.TooManyRequests {
         String animeQuoteURL = "https://animechan.xyz/api/random";
         try {
