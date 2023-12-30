@@ -4,6 +4,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'io.freefair.lombok' version '8.4'
 	id 'com.avast.gradle.docker-compose' version '0.17.6'
+	id 'com.gorylenko.gradle-git-properties' version '2.4.1'
 }
 
 group = 'com.hainenber.spreading'
@@ -20,6 +21,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.kafka:spring-kafka'
 	implementation 'org.springframework.kafka:spring-kafka-test'
 
@@ -44,6 +46,11 @@ tasks.register('build-image') {
 			"JAR_PATH=${rootProject.name}-${version}.jar",
 			'.'
 	)
+}
+
+// Include Git info into build artifacts
+springBoot {
+	buildInfo()
 }
 
 // Require running 'docker-compose up'
