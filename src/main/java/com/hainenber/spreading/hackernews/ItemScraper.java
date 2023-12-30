@@ -2,8 +2,10 @@ package com.hainenber.spreading.hackernews;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -15,15 +17,20 @@ import java.util.Optional;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "hackernews.enabled", havingValue = "true")
-public class ItemCollector {
+public class ItemScraper {
     private final RestClient restClient;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    @Value(value = "${hackernews.topic}")
+    private String hackernewsTopic;
 
     @Autowired
-    private ItemCollector(RestClient restClient) {
+    private ItemScraper(RestClient restClient, KafkaTemplate<String, String> kafkaTemplate) {
         this.restClient = restClient;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
-    @Scheduled(fixedRateString = "${hackernews.collectorIntervalMillisecond}")
+    @Scheduled(fixedRateString = "${hackernews.collector-interval-millisecond}")
     private void fetchLatestItem() {
         try {
             String latestItemUrl = "https://hacker-news.firebaseio.com/v0/maxitem.json";
@@ -36,16 +43,24 @@ public class ItemCollector {
 
             if (Optional.ofNullable(itemId).isEmpty()) {
                 log.error("Empty HackerNews's item ID at {}", collectTime);
-                return;
             }
 
-            // TODO: decouple this into another Bean and use Kafka as mediator
-            Item item = restClient.get()
-                    .uri(String.format("https://hacker-news.firebaseio.com/v0//item/%s.json", itemId))
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .body(Item.class);
-            log.info("{} HackerNews's item: {}", collectTime, item);
+            // Send to Kafka topic for further processing
+            kafkaTemplate
+                    .send(hackernewsTopic, itemId)
+                    .whenComplete((result, ex) -> {
+                        if (Optional.ofNullable(ex).isEmpty()) {
+                            log.info("Sent message=[{}] with offset=[{}]",
+                                    itemId,
+                                    result.getRecordMetadata().offset()
+                            );
+                        } else {
+                            log.error("Unable to send message=[{}] due to: {}",
+                                    itemId,
+                                    ex.getMessage()
+                            );
+                        }
+                    });
         } catch (HttpClientErrorException e) {
             log.error("Encounter {} when trying to fetch HackerNews's latest item Id",
                 e.getStatusCode()
