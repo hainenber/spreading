@@ -41,7 +41,7 @@ public class AnimeQuoteController {
                 .atZone(localTimezone);
     }
 
-    @Scheduled(fixedRateString = "${animeQuote.collectorIntervalMillisecond}")
+    @Scheduled(fixedRateString = "${animeQuote.collector-interval-millisecond}")
     private void runTask() throws HttpClientErrorException.TooManyRequests {
         String animeQuoteURL = "https://animechan.xyz/api/random";
         try {

@@ -5,7 +5,7 @@ spring:
 
 animeQuote:
   enabled: false
-  collectorIntervalMillisecond: 5000
+  collector-interval-millisecond: 5000
 
 hackernews:
   enabled: true
