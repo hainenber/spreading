@@ -2,6 +2,10 @@ spring:
   config:
     activate:
       on-profile: dev
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: hackernews
 
 animeQuote:
   enabled: false
@@ -9,4 +13,5 @@ animeQuote:
 
 hackernews:
   enabled: true
-  collectorIntervalMillisecond: 5000
+  collector-interval-millisecond: 5000
+  topic: hackernews-item-id
