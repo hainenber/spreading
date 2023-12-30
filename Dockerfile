@@ -2,7 +2,7 @@
 FROM eclipse-temurin:21-jdk-ubi9-minimal
 
 # Require specifying build JAR path
-ARG JAR_PATH=spreading-0.0.1-SNAPSHOT-plain.jar
+ARG JAR_PATH=spreading-0.0.1-SNAPSHOT.jar
 
 # Set the working directory in the container
 WORKDIR /app

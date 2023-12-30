@@ -1,7 +1,8 @@
 version: "3"
 
 services:
-  app:
-    image: hainenber/spreading:latest
+  kafka:
+    image: confluentinc/confluent-local:7.4.3
     ports:
-      - "8080:8080"
+      - "8082:8082"
+      - "9092:9092"

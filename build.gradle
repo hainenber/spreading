@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.2.0'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'io.freefair.lombok' version '8.4'
+	id 'com.avast.gradle.docker-compose' version '0.17.6'
 }
 
 group = 'com.hainenber.spreading'
@@ -29,12 +30,12 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-// Custom Gradle task to containerise the application
-tasks.register('build-image', Exec) {
-	dependsOn tasks.build
-
+// Containerise the application
+tasks.register('build-image') {
 	description = 'Builds a Docker image for the Spring Boot application'
 	group = 'docker'
+
+	dependsOn tasks.build
 
 	commandLine(
 			'docker', 'build', '-t',
@@ -43,4 +44,10 @@ tasks.register('build-image', Exec) {
 			"JAR_PATH=${rootProject.name}-${version}.jar",
 			'.'
 	)
+}
+
+// Require running 'docker-compose up'
+// to set up deps (Kafka) before testing
+dockerCompose {
+	isRequiredBy(test)
 }
