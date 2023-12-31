@@ -2,7 +2,6 @@ package com.hainenber.spreading.hackernews;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.DataException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,7 +17,6 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "hackernews.enabled", havingValue = "true")
 public class ItemSaver {
     private final RestClient restClient;
-    @Autowired
     private final ItemRepository itemRepository;
     private String lastItemId;
 

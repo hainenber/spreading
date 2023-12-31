@@ -1,7 +1,6 @@
 package com.hainenber.spreading.hackernews;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
@@ -24,7 +23,6 @@ public class ItemScraper {
     @Value(value = "${hackernews.topic}")
     private String hackernewsTopic;
 
-    @Autowired
     private ItemScraper(RestClient restClient, KafkaTemplate<String, String> kafkaTemplate) {
         this.restClient = restClient;
         this.kafkaTemplate = kafkaTemplate;
