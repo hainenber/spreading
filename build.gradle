@@ -61,3 +61,17 @@ springBoot {
 dockerCompose {
 	isRequiredBy(test)
 }
+
+// Running prerequisite commands before running `bootRun`
+tasks.register("run") {
+	dependsOn composeDown, composeUp
+	doLast {
+		exec {
+			commandLine 'flyway', '-configFiles=flyway.admin.conf', 'migrate'
+		}
+		exec {
+			commandLine 'flyway', '-configFiles=flyway.user.conf', 'migrate'
+		}
+	}
+	run.finalizedBy bootRun
+}
