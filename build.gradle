@@ -64,13 +64,16 @@ dockerCompose {
 
 // Running prerequisite commands before running `bootRun`
 tasks.register("run") {
+	def pgTestdataDirIsEmpty = file('testdata/postgres').list().size() == 0
 	dependsOn composeDown, composeUp
 	doLast {
-		exec {
-			commandLine 'flyway', '-configFiles=flyway.admin.conf', 'migrate'
-		}
-		exec {
-			commandLine 'flyway', '-configFiles=flyway.user.conf', 'migrate'
+		if (pgTestdataDirIsEmpty) {
+			exec {
+				commandLine 'flyway', '-configFiles=flyway.admin.conf', 'migrate'
+			}
+			exec {
+				commandLine 'flyway', '-configFiles=flyway.user.conf', 'migrate'
+			}
 		}
 	}
 	run.finalizedBy bootRun
