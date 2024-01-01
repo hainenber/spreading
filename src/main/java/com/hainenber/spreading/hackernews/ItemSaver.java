@@ -5,11 +5,13 @@ import org.hibernate.exception.DataException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -18,38 +20,44 @@ import java.util.Optional;
 public class ItemSaver {
     private final RestClient restClient;
     private final ItemRepository itemRepository;
-    private String lastItemId;
 
     public ItemSaver(RestClient restClient, ItemRepository itemRepository) {
         this.restClient = restClient;
         this.itemRepository = itemRepository;
-        this.lastItemId = "";
     }
 
-    @KafkaListener(topics = "${hackernews.topic}")
+    @RetryableTopic(
+        attempts = "4",
+        backoff = @Backoff(delay = 5000, multiplier = 1.0),
+        autoCreateTopics = "false",
+        topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE
+    )
+    @KafkaListener(topics = "${hackernews.topics.id}")
     private void download(String itemId) {
-        // Get IDs from Kafka's topic and fetch content
+        // Get IDs from Kafka's topic and fetch content.
         Item item = restClient.get()
-                .uri(String.format("https://hacker-news.firebaseio.com/v0//item/%s.json", itemId))
+                .uri(String.format("https://hacker-news.firebaseio.com/v0/item/%s.json", itemId))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .body(Item.class);
 
-        // Persist into database if fetched Item is not null AND not duplicating
-        boolean itemIsNotNull = Optional.ofNullable(item).isPresent();
-        if (itemIsNotNull && !Objects.equals(item.getId(), this.lastItemId)) {
-            try {
-                itemRepository.save(item);
-            } catch (DataException dataException) {
-                log.error(dataException.getMessage(), item);
-            }
+        // Throws exception for retries if HN item is empty.
+        if (Optional.ofNullable(item).isEmpty()) {
+            throw new RuntimeException(String.format("Empty HN item %s", itemId));
         }
 
-        // Cache item ID for next iteration's check
-        if (itemIsNotNull) {
-            this.lastItemId = item.getId();
+        // Throws exception to signify retrying if the text content is shown to be delayed.
+        String itemText = item.getText();
+        if (Optional.ofNullable(itemText).isPresent() && itemText.contentEquals("[delayed]")) {
+            throw new RuntimeException(String.format("Delayed text content for HN item %s", itemId));
         }
 
-        log.info("{} HackerNews's item: {}", Instant.now(), item);
+        // Persist into database
+        try {
+            itemRepository.save(item);
+            log.info("{} Save HackerNews's item: {}", Instant.now(), item.getId());
+        } catch (DataException dataException) {
+            log.error(dataException.getMessage(), item);
+        }
     }
 }

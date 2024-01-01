@@ -15,8 +15,8 @@ public class KafkaTopicConfig {
     @Value(value = "${spring.kafka.bootstrap-servers}")
     private String bootstrapAddress;
 
-    @Value(value = "${hackernews.topic}")
-    private String hackernewsTopic;
+    @Value(value = "${hackernews.topics.id}")
+    private String itemIdTopic;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -24,8 +24,8 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic hackernews() {
-        return TopicBuilder.name(hackernewsTopic)
+    public NewTopic itemId() {
+        return TopicBuilder.name(itemIdTopic)
                 .partitions(1)
                 .replicas(1)
                 .build();

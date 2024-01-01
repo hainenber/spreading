@@ -19,8 +19,9 @@ import java.util.Optional;
 public class ItemScraper {
     private final RestClient restClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private String lastItemId;
 
-    @Value(value = "${hackernews.topic}")
+    @Value(value = "${hackernews.topics.id}")
     private String hackernewsTopic;
 
     private ItemScraper(RestClient restClient, KafkaTemplate<String, String> kafkaTemplate) {
@@ -39,8 +40,13 @@ public class ItemScraper {
                     .body(String.class);
             Instant collectTime = Instant.now();
 
+            // Log error and exit early if seeing empty item ID or duplicating
             if (Optional.ofNullable(itemId).isEmpty()) {
                 log.error("Empty HackerNews's item ID at {}", collectTime);
+                return;
+            } else if (itemId.equals(this.lastItemId)) {
+                log.info("Duplicate HN item {}. Skip sending", itemId);
+                return;
             }
 
             // Send to Kafka topic for further processing
@@ -52,6 +58,7 @@ public class ItemScraper {
                                     itemId,
                                     result.getRecordMetadata().offset()
                             );
+                            this.lastItemId = itemId;
                         } else {
                             log.error("Unable to send message=[{}] due to: {}",
                                     itemId,

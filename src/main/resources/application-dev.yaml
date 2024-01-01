@@ -11,7 +11,7 @@ spring:
     consumer:
       group-id: hackernews
   jpa:
-    show-sql: true # Display SQL queries when run Hibernate functions
+    show-sql: false # Not display SQL queries when run Hibernate functions
 
 # Expose only actuator endpoints "/health" and "/info"
 # Only Git data is provided in "/info" endpoint
@@ -31,4 +31,5 @@ animeQuote:
 hackernews:
   enabled: true
   collector-interval-millisecond: 5000
-  topic: hackernews-item-id
+  topics:
+    id: hn-item-id
