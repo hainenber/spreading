@@ -24,10 +24,6 @@ management:
     git:
       enabled: true
 
-animeQuote:
-  enabled: false
-  collector-interval-millisecond: 5000
-
 hackernews:
   enabled: true
   collector-interval-millisecond: 5000
