@@ -24,17 +24,19 @@ public class ItemScraper {
     @Value(value = "${hackernews.topics.id}")
     private String hackernewsTopic;
 
+    @Value(value = "${hackernews.api-url}")
+    private String apiUrl;
+
     private ItemScraper(RestClient restClient, KafkaTemplate<String, String> kafkaTemplate) {
         this.restClient = restClient;
         this.kafkaTemplate = kafkaTemplate;
     }
 
     @Scheduled(fixedRateString = "${hackernews.collector-interval-millisecond}")
-    private void fetchLatestItem() {
+    public void fetchLatestItem() {
         try {
-            String latestItemUrl = "https://hacker-news.firebaseio.com/v0/maxitem.json";
             String itemId = restClient.get()
-                    .uri(latestItemUrl)
+                    .uri(apiUrl)
                     .accept(MediaType.TEXT_PLAIN)
                     .retrieve()
                     .body(String.class);

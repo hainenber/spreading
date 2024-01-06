@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: dev
   datasource:
     url: jdbc:postgresql://localhost:5432/spreading
     username: spreading
@@ -9,7 +6,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: hackernews
+      group-id: hackernews-dev
   jpa:
     show-sql: false # Not display SQL queries when run Hibernate functions
 
@@ -26,6 +23,7 @@ management:
 
 hackernews:
   enabled: true
+  api-url: https://hacker-news.firebaseio.com/v0/maxitem.json
   collector-interval-millisecond: 5000
   topics:
-    id: hn-item-id
+    id: hn-item-id-dev
