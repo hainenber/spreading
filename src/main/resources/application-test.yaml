@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/spreading
+    username: spreading
+    password: spreading
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: hackernews-test
+  jpa:
+    show-sql: false # Not display SQL queries when run Hibernate functions
+
+# Expose only actuator endpoints "/health" and "/info"
+# Only Git data is provided in "/info" endpoint
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  info:
+    git:
+      enabled: true
+
+hackernews:
+  enabled: true
+  api-url: http://localhost:8089/v0/maxitem.json
+  collector-interval-millisecond: 5000
+  topics:
+    id: hn-item-id-test
