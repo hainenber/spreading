@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  postgres-test:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: spreading
+      POSTGRES_PASSWORD: spreading
+      POSTGRES_DB: spreading
+
+  kafka-test:
+    image: confluentinc/confluent-local:7.4.3
+    ports:
+      - "9092:9092"

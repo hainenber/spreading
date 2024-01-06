@@ -60,12 +60,17 @@ springBoot {
 // to set up deps (Kafka) before testing
 dockerCompose {
 	isRequiredBy(test)
+	useComposeFiles = ['docker-compose.test.yml']
+
+	devRun {
+		useComposeFiles = ['docker-compose.yml']
+	}
 }
 
 // Running prerequisite commands before running `bootRun`
 tasks.register("run") {
 	def pgTestdataDirIsEmpty = file('testdata/postgres').list().size() == 0
-	dependsOn composeDown, composeUp
+	dependsOn devRunComposeDown, devRunComposeUp
 	doLast {
 		if (pgTestdataDirIsEmpty) {
 			exec {
