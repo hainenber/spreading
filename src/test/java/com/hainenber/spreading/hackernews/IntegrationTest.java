@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @EnableConfigurationProperties
 @WireMockTest
-class ItemScraperTest {
+class IntegrationTest {
     @Autowired
     private ItemScraper itemScraper;
     @Autowired
