@@ -62,6 +62,7 @@ springBoot {
 // to set up deps (Kafka) before testing
 dockerCompose {
 	useComposeFiles = ['docker-compose.test.yml']
+	isRequiredBy(test)
 
 	devRun {
 		useComposeFiles = ['docker-compose.yml']
