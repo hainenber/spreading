@@ -10,6 +10,10 @@ spring:
   jpa:
     show-sql: false # Not display SQL queries when run Hibernate functions
 
+logging:
+  level:
+    root: WARN
+
 # Expose only actuator endpoints "/health" and "/info"
 # Only Git data is provided in "/info" endpoint
 management:
