@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.KafkaException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,8 +33,7 @@ public class ItemScraper {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @Scheduled(fixedRateString = "${hackernews.collector-interval-millisecond}")
-    public void fetchLatestItem() {
+    public String fetchLatestItem() {
         try {
             String itemId = restClient.get()
                     .uri(apiUrl)
@@ -44,34 +44,50 @@ public class ItemScraper {
 
             // Log error and exit early if seeing empty item ID or duplicating
             if (Optional.ofNullable(itemId).isEmpty()) {
-                log.error("Empty HackerNews's item ID at {}", collectTime);
-                return;
+                log.error("Empty HackerNews item ID at {}", collectTime);
+                return "";
             } else if (itemId.equals(this.lastItemId)) {
-                log.info("Duplicate HN item {}. Skip sending", itemId);
-                return;
+                log.error("Duplicate HN item {}. Skip sending", itemId);
+                return "";
             }
 
-            // Send to Kafka topic for further processing
-            kafkaTemplate
-                    .send(hackernewsTopic, itemId)
-                    .whenComplete((result, ex) -> {
-                        if (Optional.ofNullable(ex).isEmpty()) {
-                            log.info("Sent message=[{}] with offset=[{}]",
-                                    itemId,
-                                    result.getRecordMetadata().offset()
-                            );
-                            this.lastItemId = itemId;
-                        } else {
-                            log.error("Unable to send message=[{}] due to: {}",
-                                    itemId,
-                                    ex.getMessage()
-                            );
-                        }
-                    });
+            return itemId;
         } catch (HttpClientErrorException e) {
-            log.error("Encounter {} when trying to fetch HackerNews's latest item Id",
-                e.getStatusCode()
+            log.error("Encounter {} when trying to fetch HackerNews's latest item ID at URL {}",
+                    e.getStatusCode(),
+                    apiUrl
             );
         }
+
+        return "";
+    }
+
+    @Scheduled(fixedRateString = "${hackernews.collector-interval-millisecond}")
+    public void fetchAndSend() {
+        String itemId = fetchLatestItem();
+        if (!itemId.isEmpty()) {
+            send(itemId);
+        }
+    }
+
+    public void send(String itemId) throws KafkaException {
+        // Send to Kafka topic for further processing
+        kafkaTemplate
+            .send(hackernewsTopic, itemId)
+            .whenComplete((result, ex) -> {
+                if (Optional.ofNullable(ex).isEmpty()) {
+                    log.info("Sent message=[{}] with offset=[{}]",
+                            itemId,
+                            result.getRecordMetadata().offset()
+                    );
+                    this.lastItemId = itemId;
+                } else {
+                    log.error("Unable to send message=[{}] due to: {}",
+                            itemId,
+                            ex.getMessage()
+                    );
+                    throw new KafkaException("unable to send message", ex);
+                }
+        });
     }
 }

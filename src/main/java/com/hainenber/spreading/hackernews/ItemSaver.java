@@ -19,7 +19,7 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "hackernews.enabled", havingValue = "true")
 public class ItemSaver {
     private final RestClient restClient;
-    private final ItemRepository itemRepository;
+    public final ItemRepository itemRepository;
 
     public ItemSaver(RestClient restClient, ItemRepository itemRepository) {
         this.restClient = restClient;
@@ -33,8 +33,8 @@ public class ItemSaver {
         topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE
     )
     @KafkaListener(topics = "${hackernews.topics.id}")
-    private void download(String itemId) {
-        // Get IDs from Kafka's topic and fetch content.
+    public void download(String itemId) {
+        // Get ID from Kafka's topic and fetch content.
         Item item = restClient.get()
                 .uri(String.format("https://hacker-news.firebaseio.com/v0/item/%s.json", itemId))
                 .accept(MediaType.APPLICATION_JSON)
